@@ -1,4 +1,4 @@
-# Sparkling Water Example Project
+# Sparkling Water App (From Sparkling Water Example Project - H2O)
 
 This is a simple example project to start coding with Sparkling Water.
 
