@@ -46,7 +46,7 @@ object SparklingWaterDroplet {
     val h2oContext = new H2OContext(sc).start()
     import h2oContext._
 
-    val uri = new java.net.URI("hdfs://nameservice1/user/bcourbe/data/"+args(0))
+    val uri = new java.net.URI(args(0))
     val table = new DataFrame(uri)
 
     // Build GBM model
