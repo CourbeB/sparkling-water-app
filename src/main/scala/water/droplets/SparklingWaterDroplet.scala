@@ -49,9 +49,8 @@ object SparklingWaterDroplet {
     val uri = new java.net.URI(args(0))
     val table = new DataFrame(uri)
 
-    //Set categorical column (note : make a function)
-    table.replace(table.find(Symbol(args(1))),table.vec(Symbol(args(1))).toEnum)
-    table.update(null)
+    //Set categorical column
+    table.colToEnum(args(1).split(','))
 
     // Build GBM model
     val gbmParams = new GBMParameters()
