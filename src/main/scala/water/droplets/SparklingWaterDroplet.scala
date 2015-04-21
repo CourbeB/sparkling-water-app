@@ -20,7 +20,7 @@ package water.droplets
 import java.io.File
 
 import hex.tree.gbm.GBM
-import hex.{ModelMetricsMultinomial, ModelMetrics, Model}
+import hex.{ModelMetricsBinomial, ModelMetrics, Model}
 import hex.tree.gbm.GBMModel
 import hex.tree.gbm.GBMModel.GBMParameters
 import org.apache.spark.h2o.{StringHolder, H2OContext}
@@ -49,12 +49,17 @@ object SparklingWaterDroplet {
     val uri = new java.net.URI(args(0))
     val table = new DataFrame(uri)
 
+    //Set categorical column (note : make a function)
+    table.replace(table.find(Symbol(args(1))),table.vec(Symbol(args(1))).toEnum)
+    table.update(null)
+
     // Build GBM model
     val gbmParams = new GBMParameters()
     gbmParams._train = table
     gbmParams._response_column = Symbol(args(1))
     gbmParams._ntrees = args(2).toInt
     gbmParams._max_depth = args(3).toInt
+    gbmParams._loss = GBMParameters.Family.bernoulli
 
     val gbm = new GBM(gbmParams)
     gTimer.start()
@@ -72,7 +77,7 @@ object SparklingWaterDroplet {
     val predictRDD = asRDD[StringHolder](predict)
 
     //ADD
-    //val trainMetricsGBM = ModelMetrics.getFromDKV(gbmModel, table).asInstanceOf[ModelMetricsMultinomial].auc
+    //val trainMetricsGBM = ModelMetrics.getFromDKV(gbmModel, table).asInstanceOf[ModelMetricsBinomial].auc
 
     // Make sure that both RDDs has the same number of elements
     assert(trainRDD.count() == predictRDD.count)
