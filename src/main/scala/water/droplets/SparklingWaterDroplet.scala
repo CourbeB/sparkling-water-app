@@ -102,7 +102,7 @@ object SparklingWaterDroplet {
          |${numMispredictions.map(i => i._1.result.get + " X " + i._2.result.get).mkString("\n")}
        """.stripMargin)
 
-    println(trainMetricsGBM._cm.toASCII)
+    println(trainMetricsGBM.cm.toASCII)
     // Shutdown application
     sc.stop()
   }
