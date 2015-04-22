@@ -18,10 +18,11 @@
 package water.droplets
 
 import hex.tree.gbm.GBM
-import hex.{ModelMetricsBinomial, ModelMetrics}
+import hex.{ModelMetricsMultinomial, ModelMetricsBinomial, ModelMetrics}
 import hex.tree.gbm.GBMModel
 import hex.tree.gbm.GBMModel.GBMParameters
 import org.apache.spark.h2o.{StringHolder, H2OContext}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkFiles, SparkContext, SparkConf}
 import water.fvec.{Frame, DataFrame}
 import water.util.Timer
@@ -48,12 +49,15 @@ object SparklingWaterDroplet {
     // Create H2O Context
     val h2oContext = new H2OContext(sc).start()
     import h2oContext._
+    implicit val sqlContext = new SQLContext(sc)
 
     val uri = new java.net.URI(args(0))
     val table = new DataFrame(uri)
 
-    //Set categorical column
+    //Set target as categorical column
     table.colToEnum(Array(args(1)))
+
+    //Remove ID column
     table.remove("ID")
     table.update(null)
 
@@ -72,14 +76,15 @@ object SparklingWaterDroplet {
 
     // Make prediction on train data
     gTimer.start()
-    val predict = gbmModel.score(table)('predict)
+    val result = gbmModel.score(table)
+    val predict = result('predict)
     gTimer.stop("H2O : Predict")
 
     // Compute number of mispredictions with help of Spark API
     val trainRDD = asRDD[StringHolder](new Frame(table.vec(Symbol(args(1)))))
     val predictRDD = asRDD[StringHolder](predict)
 
-    //ADD
+    // Compute binomialMetrics
     val trainMetricsGBM = ModelMetricsBinomial.getFromDKV(gbmModel, table)
 
     // Make sure that both RDDs has the same number of elements
@@ -102,7 +107,17 @@ object SparklingWaterDroplet {
          |${numMispredictions.map(i => i._1.result.get + " X " + i._2.result.get).mkString("\n")}
        """.stripMargin)
 
+    // Print different metrics
     println(trainMetricsGBM.cm.toASCII)
+    println(trainMetricsGBM._mse)
+    println(trainMetricsGBM.auc.accuracy)
+
+    // Export Dataframe as SchemaRDD and use sql functions
+    result._names = Array("predict","prob0","prob1")
+    val schema  = asSchemaRDD(result)
+    sqlContext.registerRDDAsTable(schema,"schema")
+    sqlContext.sql("SELECT predict, prob1 FROM schema ORDER BY prob1 DESC ").take(10).foreach(println)
+
     // Shutdown application
     sc.stop()
   }

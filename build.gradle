@@ -32,7 +32,7 @@ ext {
     // Latest stable version
     spWaterVersion = '0.2.12'
     // Latest development snapshot
-    spWaterDevelVersion = '0.2.12-SNAPSHOT'
+    spWaterDevelVersion = '0.2.13-SNAPSHOT'
 
     // Scala binary version
     scalaBinaryVersion = '2.10'
