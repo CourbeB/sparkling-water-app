@@ -30,7 +30,7 @@ buildscript {
 //
 ext {
     // Latest stable version
-    spWaterVersion = '0.2.11'
+    spWaterVersion = '0.2.12'
     // Latest development snapshot
     spWaterDevelVersion = '0.2.12-SNAPSHOT'
 
@@ -39,7 +39,7 @@ ext {
     scalaVersion = '2.10.4'
 
     // FIXME: we need to specify h2o build maven repo since it cannot be fetched transitively :-(
-    h2oBuild = '1074'
+    h2oBuild = '1109'
 }
 
 

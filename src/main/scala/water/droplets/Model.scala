@@ -2,9 +2,9 @@ package water.droplets
 
 import hex.deeplearning.DeepLearningModel
 import hex.deeplearning.DeepLearningModel.DeepLearningParameters.Activation
-import hex.glm.GLMModel
 import hex.tree.gbm.GBMModel
 import hex.tree.gbm.GBMModel.GBMParameters
+import hex.glm.GLMModel
 import hex.glm.GLMModel.GLMParameters
 import org.apache.spark.h2o.H2OContext
 import water.fvec.DataFrame
@@ -19,7 +19,7 @@ class Model {
                response: String,
                ntrees:Int = 10,
                depth:Int = 6,
-               loss: GBMParameters.Family = GBMParameters.Family.AUTO,
+               loss: GBMParameters.Family,
                learning_rate: Float = 0.1f,
                 min_sample_leaf: Int = 1)
               (implicit h2oContext: H2OContext) : GBMModel = {

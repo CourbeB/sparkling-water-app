@@ -6,7 +6,7 @@ import water.fvec.DataFrame
  * Created by B-COURBE on 21/04/2015.
  */
 package object droplets {
-  implicit class DataFrameOverwrite(df: DataFrame){
+  implicit class DataFrameOverride(df: DataFrame){
     def colToEnum(cols: Array[String]): Unit ={
       val indexes = df.find(cols)
       indexes.zipWithIndex.map(i =>

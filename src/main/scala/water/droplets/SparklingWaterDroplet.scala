@@ -17,10 +17,8 @@
 
 package water.droplets
 
-import java.io.File
-
 import hex.tree.gbm.GBM
-import hex.{ModelMetricsBinomial, ModelMetrics, Model}
+import hex.{ModelMetricsBinomial, ModelMetrics}
 import hex.tree.gbm.GBMModel
 import hex.tree.gbm.GBMModel.GBMParameters
 import org.apache.spark.h2o.{StringHolder, H2OContext}
@@ -30,7 +28,12 @@ import water.util.Timer
 import scala.collection.mutable
 
 /**
- * Example of Sparkling Water based application.
+ * Example of Sparkling Water GBM application, need to be adapted
+ * Param :
+ * Args(0) : Absolute path to your data ("hdfs://mycluster/user/bcourbe/data/prostate.csv")
+ * Args(1) : Name of the target column
+ * Args(2) : Number of trees
+ * Args(3) : Max depth
  */
 object SparklingWaterDroplet {
 
@@ -50,7 +53,9 @@ object SparklingWaterDroplet {
     val table = new DataFrame(uri)
 
     //Set categorical column
-    table.colToEnum(args(1).split(','))
+    table.colToEnum(Array(args(1)))
+    table.remove("ID")
+    table.update(null)
 
     // Build GBM model
     val gbmParams = new GBMParameters()
@@ -71,12 +76,11 @@ object SparklingWaterDroplet {
     gTimer.stop("H2O : Predict")
 
     // Compute number of mispredictions with help of Spark API
-    val tmp = new Frame(table.vec(Symbol(args(1))).toEnum)
-    val trainRDD = asRDD[StringHolder](tmp)
+    val trainRDD = asRDD[StringHolder](new Frame(table.vec(Symbol(args(1)))))
     val predictRDD = asRDD[StringHolder](predict)
 
     //ADD
-    //val trainMetricsGBM = ModelMetrics.getFromDKV(gbmModel, table).asInstanceOf[ModelMetricsBinomial].auc
+    val trainMetricsGBM = ModelMetricsBinomial.getFromDKV(gbmModel, table)
 
     // Make sure that both RDDs has the same number of elements
     assert(trainRDD.count() == predictRDD.count)
@@ -98,7 +102,7 @@ object SparklingWaterDroplet {
          |${numMispredictions.map(i => i._1.result.get + " X " + i._2.result.get).mkString("\n")}
        """.stripMargin)
 
-    // println(trainMetricsGBM.accuracy)
+    println(trainMetricsGBM._cm.toASCII)
     // Shutdown application
     sc.stop()
   }
