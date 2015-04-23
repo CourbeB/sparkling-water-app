@@ -2,6 +2,8 @@ package water
 
 import water.fvec.DataFrame
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * Created by B-COURBE on 21/04/2015.
  */
@@ -13,11 +15,16 @@ package object droplets {
       * @param cols : Array[ String ] containing all the names of enum columns
       */
     def colToEnum(cols: Array[String]): Unit ={
-      val indexes = df.find(cols)
-      indexes.zipWithIndex.map(i =>
-      {df.replace(df.find(cols(i._2)),df.vec(i._1).toEnum)
-        df.update(null)}
-      )
+      Try (!cols.map(name => { if (!df.names.contains(name)) false}).contains(false)) match {
+        case Success(_) => {
+          val indexes = df.find(cols)
+          indexes.zipWithIndex.map(i =>
+            {df.replace(df.find(cols(i._2)),df.vec(i._1).toEnum)
+            df.update(null)}
+          )
+        }
+        case Failure(_) => printf("One or several columns are not present in your DataFrame")
+      }
     }
 
     /** *
@@ -26,11 +33,7 @@ package object droplets {
       */
     def colToEnum(cols: Array[Int]): Unit ={
       val colsNames = cols.map(i=>df.name(i))
-      val indexes = df.find(colsNames)
-      indexes.zipWithIndex.map(i =>
-      {df.replace(df.find(colsNames(i._2)),df.vec(i._1).toEnum)
-        df.update(null)}
-      )
+      colToEnum(colsNames)
     }
 
     /** *
@@ -40,9 +43,10 @@ package object droplets {
       */
     def remane(oldName: String, newName: String): Unit ={
       val index = df.find(oldName)
-      val tmp = df.names
-      tmp(index) = newName
-      df._names = tmp
+      Try (index != -1) match {
+        case Success(_) => remane(index, newName)
+        case Failure(_) => println("Column missing")
+      }
     }
 
     /** *
@@ -52,8 +56,13 @@ package object droplets {
       */
     def remane(index: Int, newName: String): Unit ={
       val tmp = df.names
-      tmp(index) = newName
-      df._names = tmp
+      Try(tmp.length+1 < index) match {
+        case Success(_) => {
+          tmp(index) = newName
+          df._names = tmp
+        }
+        case Failure(t) => println(t.toString)
+      }
     }
   }
 }
